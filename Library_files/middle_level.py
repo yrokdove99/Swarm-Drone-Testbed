@@ -21,7 +21,6 @@ class MiddleLevelTaskHandler(object):
 class SetEachGoal(MiddleLevelTaskHandler):
     def __init__(self, estm, NUMOF_NODES, dst):
         super().__init__(estm, NUMOF_NODES, 'set_each_goal')
-        #!
         self.goal_pos = dst[1] # destination
 
     # Calc task_vector to achieve go to goal problem
@@ -35,11 +34,10 @@ class SetEachGoal(MiddleLevelTaskHandler):
         m = ESTM.get_node_position_matrix() #(N,3)
 
         x_g, y_g = self.goal_pos
-        # x_r : x position of robot, y_r: y position of robot
         x_i, y_i = m[:, 0], m[:, 1]#, m[:, 0]# x, y, theta -> (x, y)
         v_ix, v_iy = (x_g - x_i).reshape(1,N), (y_g - y_i).reshape(1,N)
         v_mat = np.concatenate((v_ix,v_iy),axis=0).reshape(N,2)
-        return v_mat#! shape?
+        return v_mat
 
 class Consensus(MiddleLevelTaskHandler):
     def __init__(self, estm, NUMOF_NODES, dummy=None):
@@ -50,6 +48,7 @@ class Consensus(MiddleLevelTaskHandler):
         ESTM = self.ESTM
         N = self.NUMOF_NODES
         A = np.zeros((N, N))
+        NORMALIZATION = 1000
         m = ESTM.get_node_position_matrix() #(N,3)
         p = m[:,:-1] #(x_i, y_i)
         for i in range(N):
@@ -58,7 +57,7 @@ class Consensus(MiddleLevelTaskHandler):
 
             x_i = v_i[:,0]
             y_i = v_i[:,1]
-            d = np.sqrt(np.square(x_i)+np.square(y_i)) / 1000
+            d = np.sqrt(np.square(x_i)+np.square(y_i)) / NORMALIZATION
             a = np.where(d < self.ADJ_RADIUS, 1, 0)
 
             A[i,:] = a
@@ -78,58 +77,44 @@ class Consensus(MiddleLevelTaskHandler):
             p_i = p[i,:]
             a_i = A[i,:]
             vectors_i = (p - p_i)*((1-a_i).reshape(N,1))
-            vsum = np.sum(vectors_i, axis=0).reshape(1,2) #!shape?
-            # vsum = vsum/sum(abs(np.array(vsum))) #! normalize?
+            vsum = np.sum(vectors_i, axis=0).reshape(1,2)
             vector_matrix[i,:] = vsum
         
         return vector_matrix
 
 class Formation(MiddleLevelTaskHandler):
     def __init__(self, estm, NUMOF_NODES, desired_distance:np.array=None, ACHIEVED_CONDITION_DISTANCE=None):
-        # try:
-        #     if desired_distance.any(): # exist value
-        #         pass
-        # except:
-        #     raise Exception('desired_distance is empty, must set to')
 
         super().__init__(estm, NUMOF_NODES, 'Formation', ACHIEVED_CONDITION_DISTANCE)
 
-        # self.criteria = 400
-        self.D = desired_distance[0] #(N, N)
+        self.D = desired_distance[0]
 
     def get_desired_dist(self):
         return self.D
 
     def calc_task_to_vector_matrix(self):
         """
-        Calc task vector to achieve consensus problem and set task vector for Low level
+        Calc task vector to achieve formation problem and set task vector for Low level
         """
         ESTM = self.ESTM
         N = self.NUMOF_NODES
-        m = ESTM.get_node_position_matrix() # np.array([[0, 1500, 0], [0, -1500, 0], [1500, 0, 0]])
+        m = ESTM.get_node_position_matrix()
         p = m[:,:-1] #(x_i, y_i)
         vector_matrix = np.zeros((N, 2))
         D = self.get_desired_dist()
-        
+        NORMALIZATION = 1000
         for i in range(N):
             d_i = D[i,:]
             p_i = p[i,:] # (n,2) x (n,1) -> (n,2)
             v = (p - p_i)
-            norm_ = np_la.norm((p - p_i),axis=1)/1000
+            norm_ = np_la.norm((p - p_i),axis=1) / NORMALIZATION
             diff_norm_d_i = ((norm_ - d_i).reshape(N,1))
             vectors_i = v * diff_norm_d_i # (N,2)
-            vsum = np.sum(vectors_i, axis=0).reshape(1,2) #!shape?
-
-            #! [added here]
-            #! 모든 노드가 한 직선 위에 있을 때 벡터 합성 시 zero vector 가 나오기 때문에
-            #! 만족하지 않았는데, zero vector 와 근접한 결과가 나오면 임의대로 움직이게 설정.
-            #! [HADR CODE] ####### All Nodes exist on a straight line #######
-
+            vsum = np.sum(vectors_i, axis=0).reshape(1,2)
             criteria = self.criteria
             # if desired distance is not met and norm(vsum) is almost zero vector
-            if np.any(criteria < np.abs(diff_norm_d_i*1000)) and np_la.norm(vsum) < criteria:
+            if np.any(criteria < np.abs(diff_norm_d_i * NORMALIZATION)) and np_la.norm(vsum) < criteria:
                 vsum = np.array((criteria+criteria/10, criteria+criteria/10))
-            #! [HADR CODE] ####### All Nodes exist on a straight line #######
 
             vector_matrix[i,:] = vsum
 
@@ -149,11 +134,11 @@ class LeaderFollowing(MiddleLevelTaskHandler):
         self.D = desired_distance #(N, N)
         self.default_leader_idx = 0 #! 
         self.formation_achieved = 0 # False
+        self.NORMALIZATION = 1000
 
     def blending_leader_node_gtg_vector(self, node_idx, vsum):
         if node_idx == self.default_leader_idx:
             vector_leader = self.get_leader_goal_vector()
-            v= np_la.norm(vector_leader)
             weight = self.formation_achieved # 0 or 1
             vsum = vsum + weight*vector_leader
         
@@ -162,7 +147,7 @@ class LeaderFollowing(MiddleLevelTaskHandler):
     def prevent_zero_task(self, diff_norm_d_i, vsum):
         criteria = self.criteria
         # if desired distance is not met and norm(vsum) is almost zero vector
-        if np.any(criteria < np.abs(diff_norm_d_i*1000)) and np_la.norm(vsum) < criteria:
+        if np.any(criteria < np.abs(diff_norm_d_i*self.NORMALIZATION)) and np_la.norm(vsum) < criteria:
             vsum = np.array((criteria+10, criteria+10))
         else:
             pass
@@ -190,17 +175,9 @@ class LeaderFollowing(MiddleLevelTaskHandler):
         m = ESTM.get_node_position_matrix()[:,:-1]#(N,3)
 
         goal_pos = np.array(self.leader_dst)
-        # x_r : x position of robot, y_r: y position of robot
         leader_pos = m[leader_idx,:]
         vector_leader = goal_pos - leader_pos
-        #!
-        # v= np_la.norm(goal_pos - leader_pos)
-        # if 1500 <= v < 2500:
-        #     vector_leader *= 1.5
-        # elif v < 1500:
-        #     vector_leader *= 2
-        # elif v < 600:
-        #     vector_leader *= 3
+
         return vector_leader #! shape?
 
     def calc_shape_to_D():
@@ -210,11 +187,11 @@ class LeaderFollowing(MiddleLevelTaskHandler):
 
     def calc_task_to_vector_matrix(self):
         """
-        Calc task vector to achieve consensus problem and set task vector for Low level
+        Calc task vector to achieve leaderfollowing problem and set task vector for Low level
         """
         ESTM = self.ESTM
         N = self.NUMOF_NODES
-        m = ESTM.get_node_position_matrix() # np.array([[0, 1500, 0], [0, -1500, 0], [1500, 0, 0]])
+        m = ESTM.get_node_position_matrix()
         p = m[:,:-1] #(x_i, y_i)
         vector_matrix = np.zeros((N, 2))
         D = self.get_desired_dist()
@@ -223,22 +200,18 @@ class LeaderFollowing(MiddleLevelTaskHandler):
             d_i = D[i,:]
             p_i = p[i,:] # (n,2) x (n,1) -> (n,2)
             v = (p - p_i)
-            norm_ = np_la.norm((p - p_i),axis=1)/1000
-            diff_norm_d_i = ((norm_ - d_i).reshape(N,1)) #아래서 v매트릭스와 곱을 위해, reshape
+            norm_ = np_la.norm((p - p_i),axis=1)/self.NORMALIZATION
+            diff_norm_d_i = ((norm_ - d_i).reshape(N,1))
             vectors_i = v * diff_norm_d_i # (N,2)
             vsum = np.sum(vectors_i, axis=0).reshape(1,2) #!shape?
 
             #! this part is key-code of Leader do GTG
             vsum = self.blending_leader_node_gtg_vector(node_idx=i, vsum=vsum)
 
-            #! [HARD CODE] ####### All Nodes exist on a straight line #######
             vsum = self.prevent_zero_task(diff_norm_d_i, vsum)
 
-            # vsum = vsum/sum(abs(np.array(vsum))) #! normalize?
             vector_matrix[i,:] = vsum
 
-        
-        # self.formation_achieved = self.is_formation_achieved(vector_matrix)
         formation_achieved_matrix = np_la.norm(vector_matrix, axis=1)
         formation_achieved_matrix = np.where(formation_achieved_matrix < self.criteria, 1, 0)
 
@@ -258,6 +231,8 @@ class CyclicPursuit(MiddleLevelTaskHandler):
         self.formation_achieved = 0 # False
         self.ROTATION = ROTATION
         self.D = desired_distance #(N, N)
+        self.NORMALIZATION = 1000
+
     # Calc task_vector to achieve go to goal problem
     def get_leader_goal_vector(self):
         """
@@ -269,15 +244,13 @@ class CyclicPursuit(MiddleLevelTaskHandler):
         m = ESTM.get_node_position_matrix()[:,:-1]#(N,3)
 
         goal_pos = np.array(self.leader_dst)
-        # x_r : x position of robot, y_r: y position of robot
         leader_pos = m[leader_idx,:]
         vector_leader = goal_pos - leader_pos
-        return vector_leader #! shape?
+        return vector_leader
     
     def get_desired_dist(self):
         return self.D
-    #!이제 Rotation matrix는 아예 시작단계에서 선언 후 값만 받아옴. SHAPE 정해줄 때 원하는 세타 정해주기
-
+    
     def blending_leader_node_gtg_vector(self, node_idx, vsum):
         if node_idx == self.default_leader_idx:
             vector_leader = self.get_leader_goal_vector()
@@ -299,36 +272,35 @@ class CyclicPursuit(MiddleLevelTaskHandler):
     
     def calc_task_to_vector_matrix(self):
         """
-        Calc task vector to achieve consensus problem and set task vector for Low level
+        Calc task vector to achieve cyclic pursuit problem and set task vector for Low level
         """
         ESTM = self.ESTM
         N = self.NUMOF_NODES
         R = self.ROTATION
-        m = ESTM.get_node_position_matrix() # np.array([[0, 1500, 0], [0, -1500, 0], [1500, 0, 0]])
+        m = ESTM.get_node_position_matrix()
         p = m[:,:-1] #(x_i, y_i)
         D = self.get_desired_dist()
         vector_matrix = np.zeros((N, 2))
         leader_idx = self.default_leader_idx
-        weight = self.formation_achieved #! formation 완성 전까진 회전 x
+        weight = self.formation_achieved
         v = p[:leader_idx,]
         p_l = p[leader_idx,:]
         v = v - p_l
         rotated_vectors = (R @ v.T).T
         vector_matrix[:leader_idx,:] = weight*(rotated_vectors - v)
 
-        #! formation 코드 부분
         for i in range(N):
             d_i = D[i,:]
             p_i = p[i,:] # (n,2) x (n,1) -> (n,2)
             v = (p - p_i)
-            norm_ = np_la.norm((p - p_i),axis=1)/1000
+            norm_ = np_la.norm((p - p_i),axis=1)/self.NORMALIZATION
             diff_norm_d_i = ((norm_ - d_i).reshape(N,1))
             vectors_i = v * diff_norm_d_i # (N,2)
-            vsum = np.sum(vectors_i, axis=0).reshape(1,2) #!shape?
+            vsum = np.sum(vectors_i, axis=0).reshape(1,2)
 
             vsum = self.blending_leader_node_gtg_vector(node_idx=i, vsum=vsum)
             vector_matrix[i,:] = vsum + vector_matrix[i,:]
-        #! formation 완성 판단 코드
+
         formation_achieved_matrix = np_la.norm(vector_matrix, axis=1)
         formation_achieved_matrix = np.where(formation_achieved_matrix < self.criteria, 1, 0)
 
@@ -366,7 +338,7 @@ class MiddleLevelControl():
         if task_type == 'GoToGoal': handler = SetEachGoal(self.estm, self.NUMOF_NODES, goal)
         elif task_type == 'Consensus': handler = Consensus(self.estm, self.NUMOF_NODES, goal)
         elif task_type == 'Formation': handler = Formation(self.estm, self.NUMOF_NODES, goal, self.ACHIEVED_CONDITION_DISTANCE)
-        elif task_type == 'LeaderFollowing': handler = LeaderFollowing(self.estm, self.NUMOF_NODES, goal, self.ACHIEVED_CONDITION_DISTANCE) # 'type', dst, distances
+        elif task_type == 'LeaderFollowing': handler = LeaderFollowing(self.estm, self.NUMOF_NODES, goal, self.ACHIEVED_CONDITION_DISTANCE)
         elif task_type == 'CyclicPursuit': handler = CyclicPursuit(self.estm, self.NUMOF_NODES, goal, self.ACHIEVED_CONDITION_DISTANCE, self.ROTATION)
         else:
             handler = None
@@ -390,8 +362,6 @@ class MiddleLevelControl():
         if self._exist_middle_level_task():
             #* get handler for middle level task
             #* Update handler for middle level task if only task is changed
-            #! high level에서 내려주는 middle level task를 확인하여 그에 맞는 handler 선정
-            #! middle level task는 급격히 변하지 않으므로 경우에 따라 외부에서 handler를 선언하여 계속 사용해도 무관할 듯!
             if self._middle_level_task != self._latest_middle_level_task:
                 self._latest_middle_level_task = self._middle_level_task
                 self.task_handler = self._get_handler(self._middle_level_task)

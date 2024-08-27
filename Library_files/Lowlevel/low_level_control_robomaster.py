@@ -63,7 +63,7 @@ class LowLevelControlRobomaster():
         self.now_state = 'safe' 
         self.state_desired = 'safe' 
         self.state_undesired = 'fw' 
-        self.OBST_DETECT_MARGIN = OBST_DETECT_MARGIN #! 현재 감지되지 않았더라도, 계속 감지된 상태임을 유지하는 횟수
+        self.OBST_DETECT_MARGIN = OBST_DETECT_MARGIN
         self.obst_margin_cnt_down = 0 
 
         ##### consensus #####
@@ -90,15 +90,12 @@ class LowLevelControlRobomaster():
         """
         global g_distance_matrix
         distance = sensor_raw_data
-        # mylog.error("tof1:{0}  tof2:{1}  tof3:{2}  tof4:{3}".format(distance[0], distance[1], distance[2], distance[3]))
-        # print("tof1:{0}  tof2:{1}  tof3:{2}  tof4:{3}".format(distance[0], distance[1], distance[2], distance[3]))
 
         M = self.NUMOF_SENSORS
         #! Update distance information
         with lock:
             g_distance_matrix[node_idx:] = distance[:M]
         
-        # print(f'g_distance_matrix: {g_distance_matrix}')
         self.recv_cnt += 1
 
     def send_to_node(self, g_task_vector_matrix, g_pos_matrix, g_prox_uvm_fw, enableAO=True):
@@ -107,7 +104,6 @@ class LowLevelControlRobomaster():
         robot.set_wheel_speed(wheel_rpm_vector)
         self.send_cnt += 1
 
-    #!#####################################################
     def vector_to_mecanum_wheel_ratio(self, vx, vy) -> tuple:
         w1 = vx+vy
         w2 = vx-vy
@@ -154,13 +150,10 @@ class LowLevelControlRobomaster():
 
     def calc_global_to_local_coordinate(self, heading, global_vector):
         #* ----- 1. calc desired vector to move -----
-        #! goal position에 대한 task_vector 계산은 Middle level: SetEacGoal class 의 execute()에서 담당
-        #! global coordinate system
         vgx, vgy = global_vector
         vx_, vy_ = vgx, vgy
         
         #* ----- 3. calc vector expression from global Coordinate System to Local(robot) C.S.  -----
-        # calc difference: between robot heading and global starting point
         theta_g = atan2(vy_, vx_)
         theta_c = heading
         theta_gc = theta_g-theta_c # angle difference
@@ -172,24 +165,20 @@ class LowLevelControlRobomaster():
 
         return vx_local, vy_local
 
-
     def get_task_vector(self, g_task_vector_matrix):
         return g_task_vector_matrix[self.node_idx,:]
     
     def get_task_vector_for_state(self, g_task_vector_matrix):
         if self.obst_margin_cnt_down > 0:
             if self.now_state == self.state_desired:
-                # print(f'Maintain {self.obst_margin_cnt_down}')
                 #! maintain latest vector for preventing collision
                 #! this cycle-number called by 'margin'
                 task_vector = self.latest_task_vector
                 self.obst_margin_cnt_down -= 1
                 
             else:
-                # print(f'Dangerous {self.obst_margin_cnt_down}')
                 task_vector = self.latest_task_vector
         else:
-            # print(f'Safe {self.obst_margin_cnt_down}')
             # original task
             task_vector = (self.get_task_vector(g_task_vector_matrix)/1000).reshape(2,1)
             
@@ -198,8 +187,7 @@ class LowLevelControlRobomaster():
     
     def get_node_obst_distance(self):
         global g_distance_matrix
-        return g_distance_matrix[self.node_idx,:] / 1000 #! estimation에서 단위변환까지 다 하게끔 변경.
-    #! global 변수 하나 더 만들어서, raw data 전용, 단위 변환된 distance 전용으로 나눠서 하는게 어떨지?
+        return g_distance_matrix[self.node_idx,:] / 1000
     
     # TODO: go to low level control part
     def get_follow_wall_vector_weight_param(self, np_d):
@@ -219,7 +207,6 @@ class LowLevelControlRobomaster():
         x, y, theta = g_pos_matrix[self.node_idx,:]
         return theta
     
-    #!#####################################################
     def calc_pid_normal_wheel_ratio(self, wheel_ratio, deg):
         max_error = 180
         max_rot_speed = 1
@@ -246,7 +233,7 @@ class LowLevelControlRobomaster():
 
     def get_aggregated_weight(self, dists):
         LLCM = self.LLCMethods
-        w_fw = LLCM.blending_function_np(np.append(0,dists)) # np.append(0,dist): np.vectorize 의 첫번째 요소 return 값이 False면 작동안된다.
+        w_fw = LLCM.blending_function_np(np.append(0,dists))
         do = w_fw[1:]
         w_ag = self.blend(do)
 
@@ -258,7 +245,6 @@ class LowLevelControlRobomaster():
 
         vx_g, vy_g = u_ao
 
-        # get how much should this node rotation CW(clockwise) or CCW
         deg_rotation = LLCM.calc_desired_rotation_angle(theta_h, vx_g, vy_g)
 
         # if angle error is not zero -> sum rotation ratio and task-vector`s wheel ratio
@@ -270,10 +256,6 @@ class LowLevelControlRobomaster():
 
             rotation_normal_wheel_ratio = normalized_vector(rot_direction)
 
-            #!For PID Controlled rotation ratio:
-            #! rotation_normal_wheel_ratio = self.calc_pid_normal_wheel_ratio(rotation_normal_wheel_ratio, deg_rotation)
-
-        # if no angle error -> nothing to sum
         else:
             rotation_normal_wheel_ratio = np.array((0,0,0,0))
 
@@ -299,9 +281,6 @@ class LowLevelControlRobomaster():
         magnitude = np_la.norm(u_t)
 
         # when get to close to goal position -> stop
-        #! self.now_state == self.state_desired 조건이 없는 경우,
-        #! 회피 기동 중에 회피 벡터 u_ao 의 magnitude가 작아지게 된다면
-        #! 마찬가지로 멈추기 때문에 해당 조건을 넣은 것임.
         if magnitude < self.ACHIEVED_CONDITION_DISTANCE and self.now_state == self.state_desired: 
             stop_ratio = (0,0,0,0)
             return stop_ratio
@@ -315,7 +294,6 @@ class LowLevelControlRobomaster():
 
         # if obstacle is detected -> change self.now_state 
         if w_ag != 0:
-            # robot.set_wheel_speed((0,0,0,0))
             self.now_state = self.state_undesired
             self.obst_margin_cnt_down = self.OBST_DETECT_MARGIN
             
@@ -395,27 +373,3 @@ class LowLevelControlRobomaster():
         th_send = Thread(target=self.send_to_node, args=(task_vm, ), daemon=True) 
         th_send.start()
         return th_send
-
-    # def low_level_control_routine(self, g_distance_matrix):
-    #     robot = self.rob
-
-    #     th_gimbal = self.init_gimbal()
-
-    #     self.init_sensor(g_distance_matrix)
-
-    #     th_send = self.init_send_cmd()
-
-    #     #* ----- 3. wait for main flag on ----- 
-    #     while not g_flag_program_run: pass
-
-    #     #* ----- 4. while main flag on, just sleep -> routines are running by thread ----- 
-    #     while g_flag_program_run: time.sleep(1)
-                
-    #     #* ----- 5. terminate thread ----- 
-    #     robot._chassis.unsub_attitude() # stop receiving sensor raw data
-    
-    #     th_send.join()
-    #     if robot.model == 's1': th_gimbal.join()
-
-    #     robot.close() # TODO: Close timing 확인하기.   
-    #     print(f'[NODE{robot.node_idx}] Closed')    

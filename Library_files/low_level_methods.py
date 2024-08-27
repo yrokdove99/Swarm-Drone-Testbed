@@ -19,7 +19,7 @@ class LowLevelControlMethods():
         
     def get_PID_weight(self, err, err_max, value_max):
         alpha = (value_max)/err_max#1000 / 3
-        weight = min(value_max, alpha*round(err,2)) # 1000 -> 0.5 * 1000(diagonal), 0.25 * 1000 (forward)
+        weight = min(value_max, alpha*round(err,2))
         return weight
 
     def calc_head_rotation_angle(self, heading, vxg, vyg):
@@ -68,7 +68,7 @@ class LowLevelControlMethods():
         return weight
 
     def declare_np_blending(self):
-        self.np_blending = np.vectorize(self.blending_function)#!
+        self.np_blending = np.vectorize(self.blending_function)
 
     def blending_function_np(self, arr):
         return self.np_blending(arr)
@@ -91,7 +91,7 @@ class LowLevelControlMethods():
 
     def get_Ufw_Utask(self, rob, dist, task_vector, nonfunc=False):
         ESTM = self.ESTM
-        w_fw = self.blending_function_np(np.append(0,dist)) # np.append(0,dist): np.vectorize 의 첫번째 return 값이 0이면 안된다.
+        w_fw = self.blending_function_np(np.append(0,dist))
         w_fw = w_fw[1:]
 
         obst_front, obst_side = self.get_obst_location(w_fw)
@@ -139,9 +139,6 @@ class LowLevelControlMethods():
             return u_task
         else:
             w_ag = self.get_aggregated_weight(option, w_fw) #! weight_aggregated
-        
-            #print(f'w_ag: {w_ag}')
-            # w_ag = 0.3 if w_ag != 0 else 0 #!
             v_ao = w_ag*u_fw + (1-w_ag)*u_task
             
             return v_ao

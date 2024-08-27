@@ -39,11 +39,9 @@ class LowLevelControl():
                 node_idx: index of robot
         """
         distance = sensor_raw_data
-        # mylog.error("tof1:{0}  tof2:{1}  tof3:{2}  tof4:{3}".format(distance[0], distance[1], distance[2], distance[3]))
-
         N = self.NUMOF_SENSORS
         robot = self.rob
-        robot._prox.update_sensor_raw_data(sensor_raw_data[:N]) # TODO: 추후 수정 -> update_prox(raw_data) 등으로 교체.
+        robot._prox.update_sensor_raw_data(sensor_raw_data[:N])
         
         with lock:
             self.g_prox_information[node_idx:] = sensor_raw_data[:N]
@@ -64,8 +62,6 @@ class LowLevelControl():
 
     def low_level_control_start(self, UP_LINK_FREQ:int=50):
         robot = self.rob
-        # g_debug_msg.append([dt.now(), f'[{sys._getframe(0).f_code.co_name}]: wait_flag_program_run_on'])
-
         #* ----- 1. set callback function to get sensor raw data ----- 
         ep_sensor = robot.sensor
         ep_sensor.sub_distance(freq=UP_LINK_FREQ, callback=self.callback_receive_from_node, node_idx=robot.node_idx)
@@ -81,7 +77,6 @@ class LowLevelControl():
 
         #* ----- 3. wait for main flag on ----- 
         while not self.g_flag_program_run[0]: pass
-        # g_debug_msg.append([dt.now(), f'[{sys._getframe(0).f_code.co_name}]: free_wait_flag_program_run_on'])
 
         #* ----- 4. while main flag on, just sleep -> routines are running by thread ----- 
         while self.g_flag_program_run[0]: time.sleep(1)
@@ -92,5 +87,5 @@ class LowLevelControl():
         th_send.join()
         if robot.model == 's1': th_gimbal.join()
 
-        robot.close() # TODO: Close timing 확인하기.   
+        robot.close()  
         print(f'[NODE{robot.node_idx}] Closed')    

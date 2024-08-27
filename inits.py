@@ -184,7 +184,7 @@ def loop_low_level_control(LLC, enableAvoidObstacle):
     #* ----- 3. wait for main flag on ----- 
     while not g_flag_program_run: pass
     start = timer()
-    #* ----- 4. while main flag on, just sleep -> routines are running by thread ----- 
+    #* ----- 4. while main flag on, just sleep -> routines are running by thread -----
     while g_flag_program_run:
         LLC.send_to_node(g_task_vector_matrix, g_pos_matrix, g_prox_uvm_fw, enableAvoidObstacle)
     end = timer() - start

@@ -45,8 +45,8 @@ class ClientApp(object):
             # print('Rigid bodies:')
             # for b in sorted(rigid_bodies, key=lambda b: b.id_):
             if len(rigid_bodies) != NUMOF_NODES:
-                raise Exception('의도한 작동 로봇 수와 Opti-track에서 가져오는 로봇 수가 다릅니다!\
-                Opti-track Motive 프로그램-Assets 윈도우의 등록된 RigidBody와 NUMOF_NODES 변수를 확인하세요')
+                raise Exception('The number of operating robots intended and the number of robots imported from Opti-track are different!\
+                Check the registered RigidBody and NUMOF_NODES variables in the Opti-track Motive Program-Asset window')
 
             for body in rigid_bodies:
                 
@@ -54,9 +54,8 @@ class ClientApp(object):
                     # 글로벌 변수 tracking_infomation[i]에 값 업데이트(크기 1짜리 큐라고 생각하면 될듯. 외부에서 볼 땐 항상 최신값만 저장되어있다.)
                     g_tracking_information[int(body.id_)] = body
                 else:
-                    raise Exception('생성된 노드 번호 중에 Optitrack-Motive program 의 Streaming ID와 일치하는 것이 없습니다.\
-                    Main 함수에서 robot_index와 robots 선언부를 다시 확인하세요.')
-
+                    raise Exception('None of the node numbers generated match the Streaming ID of the Optitrack-Motive program.\
+                    Check the robot_index and robots declaration again in the Main function.')
 
 g_tracking_information = None
 NUMOF_NODES = None
@@ -79,7 +78,7 @@ def create_motion_tracker(server_name = '127.0.0.1', g_track_info:dict=None, rat
 
 def tracking_position(motion_tracker):
     try:
-        motion_tracker._client.run_once()  # 포지션 정보들을 리턴 받는 방식으로 변경하고,
+        motion_tracker._client.run_once()
     except (KeyboardInterrupt, SystemExit):
         motion_tracker._client._log.info('Exiting')
     except natnet.DiscoveryError as e:
@@ -94,8 +93,7 @@ def tracking_position_original(server_name = '127.0.0.1', rate = 100, quiet = No
         # Continuously receive and process messages
         while g_flag_tracking:
             # update positions of robots
-            motion_tracker._client.run_once()  # 포지션 정보들을 리턴 받는 방식으로 변경하고,
-
+            motion_tracker._client.run_once()
 
     except (KeyboardInterrupt, SystemExit):
         motion_tracker._client._log.info('Exiting')

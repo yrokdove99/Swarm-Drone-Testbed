@@ -2,9 +2,6 @@ from math import *
 import numpy as np
 from .robomaster_pkg import robot
 
-#from - import normalized_vector
-#import ceil_from_digits
-
 class MyRobomaster(robot.Robot):
     def __init__(self, node_idx:int, ip:str, sn:str=None, model:str=None, sensors_position:dict=None):
         global OBST_DETECT_MARGIN, MAX_DETECT_DISTANCE # 1.0

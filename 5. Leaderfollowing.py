@@ -8,7 +8,7 @@ NUMOF_NODE = 3
 #! and continues to clock wise sequence(+90: right, -90: left)
 SENSOR_ANGLES = [0, 90, -90] 
 
-#! 3. set Avoid obstacle parammeters
+#! 3. set Avoid obstacle parameters
 enableAvoidObstacle = True #! Enable Avoid Obstacle
 ACHIEVED_CONDITION_DISTANCE = 0.1 #! Tuned here
 BLENDING_DISTANCE, BLENDING_SIGMA = 0.2, 0.3
@@ -20,11 +20,11 @@ RUNNING_TIME_LIMIT = 180
 
 #! underline parameters dependent on upper parameters you set
 robots_info, NODE_IDX_LIST =  init_(NUMOF_NODE, SENSOR_ANGLES)
-#! Set goal_position 
+#! Set goal position 
 DST = (1000, -1000)
-#! Set desired_distance
+#! Set desired distance
 d = desired_distance = 1
-#! Set Formation Shape
+#! Set formation shape
 SHAPE = triangle = np.array(
 [[0, d, d],
 [d, 0, d],

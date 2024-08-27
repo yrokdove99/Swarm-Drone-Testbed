@@ -88,8 +88,7 @@ class Estimation():
         distance_matrix = np.round(sensor_raw_data / 1000, 2) # (n,3)
 
         if self.NUMOF_SENSORS < distance_matrix[:,:].shape[1]:
-            #* raw data 중에 쓸모 없는 데이터가 항상 포함되어 받아오고자 하는 데이터 크기와 일치하지 않는 경우
-            distance_matrix = distance_matrix[:,:self.NUMOF_SENSORS] # 필요한 정보 까지만 받아옴.
+            distance_matrix = distance_matrix[:,:self.NUMOF_SENSORS]
 
         # g_distance_matrix = distance_matrix
         self.node_distance_matrix = distance_matrix
@@ -101,7 +100,7 @@ class Estimation():
         mat = np.zeros((N, 2*M))
         mat[:,:M] = mat_x
         mat[:,M:] = mat_y
-        return mat # TODO: description 만들기
+        return mat
 
     def decompose_real_imag(self, vector_comp): # vector_comp : (N,M)
         M = self.NUMOF_SENSORS
@@ -140,29 +139,23 @@ class Estimation():
         self.prox_vector_matrix = g_prox_vm
 
         return g_prox_vm, g_prox_uvm_fw
-        # g_prox_vm = self.get_vector_matrix(*self.decompose_real_imag(self.vector_obst))
         
-        # self.update_prox_follow_wall_vector_matrix(self, np_d, vector_comp)
-        # self.update_prox_opposite_vector_matrix(self, np_d, vector_comp)
-        
-
     def estimation_routine(self, g_tracking_info, g_distance_matrix):
         """
-        - Motion tracking-Motive Program을 통해 얻은 tracking info를 가공하여
-            - 1.global position vector matrix 정보를 생성하고 g_pos_matrix 에 업데이트한다.
-            - g_pos_matrix: (Nx3) 크기의 행렬, column은 x, y theta 정보를 나타냄.
+        - By processing the tracking info obtained through the Motion Tracking-Motive Program
+            - 1.Create global position vector matrix information and update it to g_pos_matrix.
+            - g_pos_matrix: (Nx3) -sized matrix, column represents x, y theta information.
 
-        - IR sensor를 통해 얻은 distance info를 가공하여
-            - 2.proximity vector matrix 를 생성 후 g_prox_vm 에 업데이트한다.
-            - g_prox_vm: (NxM) 크기의 행렬, N개의 노드, M개의 센서에 각각 감지된 장애물 까지의 거리를 global 좌표계에서의 (x,y) 좌표로 나타냄.
+        - By processing the distance info obtained through the IR sensor
+            - 2.Proximity vector matrix is created and updated to g_prox_vm.
+            - g_prox_vm: (NxM) represented in (x,y) coordinates in the global coordinate system the distance to the obstacle detected by each of the (NxM) size matrix, N nodes, and M sensors.
         """
-        
         #! g_debug_msg.append([dt.now(), f'[{sys._getframe(0).f_code.co_name}]: wait_until_tracking_information_init'])
-        # Motion tracking 작동하여 tracking 정보가 init 될떄 까지 대기
-        #! wait_until_tracking_information_init() 
+        # Motion tracking operates and waits until tracking information is initiated
+        #! wait_until_tracking_information_init()
         #! g_debug_msg.append([dt.now(), f'[{sys._getframe(0).f_code.co_name}]: wait_until_sensor_data_init'])
 
-        # Low level control 작동하여 sensing된 distance 정보가 init 될떄 까지 대기
+        # Wait until low level control is activated and sensed distance information is initiated
         #! wait_until_sensor_data_init()
         # g_debug_msg.append([dt.now(), f'[{sys._getframe(0).f_code.co_name}]: free_wait_until_sensor_data_init'])
         

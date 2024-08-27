@@ -8,7 +8,7 @@ NUMOF_NODE = 3
 #! and continues to clock wise sequence(+90: right, -90: left)
 SENSOR_ANGLES = [0, 90, -90] 
 
-#! 3. set Avoid obstacle parammeters
+#! 3. set Avoid obstacle parameters
 enableAvoidObstacle = True #! Enable Avoid Obstacle
 ACHIEVED_CONDITION_DISTANCE = 0.1 #! Tuned here
 BLENDING_DISTANCE, BLENDING_SIGMA = 0.2, 0.3
@@ -20,7 +20,7 @@ RUNNING_TIME_LIMIT = 180
 
 #! underline parameters dependent on upper parameters you set
 robots_info, NODE_IDX_LIST =  init_(NUMOF_NODE, SENSOR_ANGLES)
-#! Not goal_position
+#! Not goal position
 dummy_point = (-1, -1)
 #! 'scenario_name', shape, goal_pos
 task = ['Consensus', (None, dummy_point)]

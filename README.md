@@ -2,18 +2,16 @@
 
 <table>
   <tr>
-    <td><img src="URL_OF_GIF_1" width="200"/></td>
-    <td><img src="URL_OF_GIF_2" width="200"/></td>
-    <td><img src="URL_OF_GIF_3" width="200"/></td>
+    <td><img src="https://github.com/user-attachments/assets/02173d7c-6904-47db-99b2-20c5cc657b2e" width="200"/></td>
+    <td><img src="https://github.com/user-attachments/assets/e4e1c530-b803-40e1-a53f-263e01b3aca7" width="200"/></td>
+    <td><img src="https://github.com/user-attachments/assets/9abeff15-d530-4a2f-93cf-0e21465c6bf9" width="200"/></td>
+    <td rowspan="2"><img src="https://github.com/user-attachments/assets/9cccd273-e668-449f-af7c-282fc7f8fa97" width="400"/></td>
   </tr>
   <tr>
-    <td><img src="URL_OF_GIF_4" width="200"/></td>
-    <td><img src="URL_OF_GIF_5" width="200"/></td>
-    <td><img src="URL_OF_GIF_6" width="200"/></td>
-  </tr>
-  <tr>
-    <td colspan="3" align="center"><img src="URL_OF_GIF_7" width="600"/></td>
-  </tr>
+    <td><img src="https://github.com/user-attachments/assets/f5d0a633-bb3e-47cb-9df2-1543d886eca9" width="200"/></td>
+    <td><img src="https://github.com/user-attachments/assets/a7002302-eb93-49a2-8634-a670e2af97fd" width="200"/></td>
+    <td><img src="https://github.com/user-attachments/assets/7f5f2b42-3aa2-4be8-8db7-f0e2f475e7c1" width="200"/></td>
+    </tr>
 </table>
 
 

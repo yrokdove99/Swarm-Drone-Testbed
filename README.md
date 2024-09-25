@@ -1,4 +1,4 @@
-# Robomaster EP 기반 군집 로봇 테스트베드 구축
+# Robomaster EP 기반 군집 로봇 테스트베드 구축 및 제어 알고리즘 구현
 
 <table>
   <tr>
@@ -17,6 +17,7 @@
 
 ## 설명
 실내 측위 장비 두리시스템사의 Optitrack 장비를 기반으로 구축하였습니다.
+테스트베드 환경을 통해 6가지 기능을 구현하여 테스트해보았습니다.
 
 
 ## 설치 (Installation)
@@ -32,12 +33,12 @@
 
 
 ## 주요 스크립트
-- `Gotogoal.py`: 목표 지점까지 이동하는 알고리즘.
-- `Avoidobstacle.py`: 장애물 회피 알고리즘.
-- `Consensus.py`: 다중 에이전트 간 합의 알고리즘.
-- `Formation.py`: 대형 형성 알고리즘.
-- `Leaderfollowing.py`: 리더 팔로잉 알고리즘.
-- `Cyclicpursuit.py`: 순환 추적 알고리즘.
+- `Gotogoal.py`: 목표 지점까지 이동하는 기능.
+- `Avoidobstacle.py`: 장애물 회피 기능.
+- `Consensus.py`: 다중 에이전트 간 합의.
+- `Formation.py`: 대형 형성 기능.
+- `Leaderfollowing.py`: 리더 팔로잉 기능.
+- `Cyclicpursuit.py`: 순환 추적 기능.
 
 
 ## 사용법 (Usage)

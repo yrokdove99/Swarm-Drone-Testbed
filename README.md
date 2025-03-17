@@ -60,6 +60,6 @@ python Leaderfollowing.py
 python Cyclicpursuit.py
 ```
 
-이 프로젝트는 24.01 ~ 24.08 충남대학교 모빌리티 실험실에서 수행한 것입니다.
+이 프로젝트는 충남대학교 모빌리티 실험실에서 수행한 것입니다.
 
 자세한 영상을 보시려면 https://www.youtube.com/playlist?list=PLzxTrGXs-YYCN0y-ZgE6PvbbiA0Lm5HWJ 를 참고해주세요
